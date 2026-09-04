@@ -19,3 +19,70 @@ Similarly, if the number is 5 and the jumbled message is ABC, then the actual me
 alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
+fragments = []
+
+temp_parts = encoded.split("[")
+
+for part in temp_parts:
+    if "::ok]" in part:
+        before_bracket = part.split("]")[0]
+        
+        segment_parts = before_bracket.split("::")
+        
+        if len(segment_parts) == 3 and segment_parts[2] == "ok":
+            num_str = segment_parts[0]
+            cipher_text = segment_parts[1]
+            
+            is_number = True
+            for ch in num_str:
+                if ch < '0' or ch > '9':
+                    is_number = False
+                    break
+            
+            if is_number:
+                num = 0
+                for ch in num_str:
+                    num = num * 10 + (ord(ch) - ord('0'))
+                
+                fragments.append((num, cipher_text))
+
+for i in range(len(fragments)):
+    min_idx = i
+    for j in range(i + 1, len(fragments)):
+        if fragments[j][0] < fragments[min_idx][0]:
+            min_idx = j
+    temp = fragments[i]
+    fragments[i] = fragments[min_idx]
+    fragments[min_idx] = temp
+
+decoded_fragments = []
+
+for num, cipher_text in fragments:
+    decoded_chars = []
+    
+    for ch in cipher_text:
+        if ch in alphabet:
+            for i in range(len(alphabet)):
+                if alphabet[i] == ch:
+                    idx = i
+                    break
+            
+            new_idx = (idx - num) % 26
+            decoded_chars.append(alphabet[new_idx])
+        else:
+            decoded_chars.append(ch)
+    
+    decoded_text = ""
+    for ch in decoded_chars:
+        decoded_text = decoded_text + ch
+    
+    decoded_fragments.append((num, decoded_text))
+
+final_message = ""
+for i in range(len(decoded_fragments)):
+    final_message = final_message + decoded_fragments[i][1]
+
+for num, text in decoded_fragments:
+    print(str(num) + ": " + text)
+
+print(final_message)
