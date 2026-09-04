@@ -4,18 +4,35 @@ encoded = """
    [2::OG::ok] | [4::XLI::ok] | [7::WT7::bad] |
    [6::GZ_7_VS::ok] | [99::IGNORE_ME::bad] | %%noise%%
 """
-
-###############################################################
-"""
-1. Part of the real message is inside the the '[' and ']' brackets.
-2. Each fragment inside the brackets has a number, jumbled text of the message, and 'ok'. Focus on only those fragments. The '::' are just separating these parts in the fragment 
-3. To find the actual message in every fragment,take every letter in the jumbled message, and shift it backward by the number part in that fragment
-For example, if the number is 3 and the jumbled message is ABC, then the actual message is XYZ.
-Similarly, if the number is 5 and the jumbled message is ABC, then the actual message is VWX.
-4. Ignore any fragment that has 'bad' instead of 'ok'.
-5. Once you have decoded all the fragments, combine them in the order of their numbers to get the final message. First comes the fragment with number 1, then 2, and so on.
-"""
-
+import re
 alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
+pattern = r'\[([^]]+)\]'
+matches = re.findall(pattern, encoded)
+fragments = []
+for match in matches:
+    parts = match.split('::')
+    if len(parts) != 3:
+        continue
+    num_str, text, status = parts
+    if status != 'ok' or not num_str.isdigit():
+        continue
+    num = int(num_str)
+    fragments.append((num, text))
+fragments.sort(key=lambda x: x[0])
+def shift_backward(text, shift):
+    result = []
+    for ch in text:
+        if ch.isalpha():
+            base = ord('A') if ch.isupper() else ord('a')
+            new_ord = (ord(ch) - base - shift) % 26 + base
+            result.append(chr(new_ord))
+        else:
+            result.append(ch)
+    return ''.join(result)
+decoded_parts = []
+for num, text in fragments:
+    decoded = shift_backward(text, num)
+    decoded_parts.append((num, decoded))
+final_message = ''.join([part for _, part in sorted(decoded_parts)])
+print(final_message)
 
